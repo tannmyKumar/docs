@@ -57,7 +57,7 @@ An order can be included in Speede export when **all** of the following are true
 | Company | ISIN present |
 | Client | Trading client linked on the order |
 | Demat + bank | Resolvable from **desk accounts** and/or **linked verified KYC** (dual-read) |
-| Settlement | If client has both NSDL and CDSL complete demats, order must have settlement depository set |
+| Settlement | If the client has **2+** complete demat accounts, the order must set `settlementDematAccountId` (specific account). `settlementDepository` is derived from that account’s portal and kept for Speede filters. One complete demat is auto-selected. |
 
 Maximum **500** orders per export batch.
 
@@ -68,9 +68,11 @@ Speede does **not** read desk bank/demat only. The shared resolver loads:
 1. Remaining desk `TradingClient` demat/bank rows
 2. Linked customer’s **verified** KYC demat/bank as fallback
 
-Per portal: if a complete desk demat exists, it wins; otherwise verified KYC fills the gap. Banks: usable desk banks win; else verified KYC bank.
+Merge key is **dpId + clientId** (not one row per portal). Multiple NSDL or CDSL accounts are allowed. Complete desk demat for a key wins; otherwise verified KYC fills that key. Banks: usable desk banks win; else verified KYC bank.
 
 If desk rows were stripped because they matched KYC (same account must not live in both places), Speede still works via KYC fallback.
+
+When resolving the delivery demat for an order, Speede prefers `Order.settlementDematAccountId`. If unset, it falls back to filtering by `settlementDepository` (portal) and errors if more than one ready account remains.
 
 ## Configuration (no secrets in this doc)
 
